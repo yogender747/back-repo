@@ -11,10 +11,11 @@ from datetime import datetime
 import os
 
 # Create Flask app and set the template folder to the emotionDetection templates
+# (Assuming emotionDetection remains at the same level as backend)
 app = Flask(__name__, template_folder="../emotionDetection/templates")
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "supersecretkey")  # Use env var in production
 
-# ✅ Load Face Detector & Model using relative paths
+# ✅ Load Face Detector & Model using relative paths (sibling folder: emotionDetection)
 cascade_path = os.path.join(os.path.dirname(__file__), '..', 'emotionDetection', 'haarcascade_frontalface_default.xml')
 model_path = os.path.join(os.path.dirname(__file__), '..', 'emotionDetection', 'model.h5')
 face_cascade = cv2.CascadeClassifier(cascade_path)
@@ -24,7 +25,8 @@ classifier = load_model(model_path)
 emotion_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Neutral', 'Sad', 'Surprise']
 
 # ✅ Load Music Dataset from relative path
-data_moods_path = os.path.join(os.path.dirname(__file__), '..', 'songRecommender', 'data', 'data_moods.csv')
+# Note: Since songRecommender is now inside backend, we adjust the relative path accordingly.
+data_moods_path = os.path.join(os.path.dirname(__file__), 'songRecommender', 'data', 'data_moods.csv')
 df1 = pd.read_csv(data_moods_path)
 
 # ✅ Initialize Spotify API using environment variables for credentials
