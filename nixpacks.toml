@@ -1,2 +1,2 @@
 [phases.setup]
-nixPkgs = ["python310", "mesa", "libglvnd", "libglvnd.dev", "freeglut"]
+nixPkgs = ["python310", "mesa", "libglvnd", "libglvnd.dev", "freeglut", "libGL"]
