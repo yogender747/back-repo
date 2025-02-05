@@ -11,3 +11,4 @@ spotipy==2.22.0
 pandas==1.5.3
 opencv-python==4.6.0.66
 werkzeug==2.3.7
+opencv-python-headless
