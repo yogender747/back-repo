@@ -29,4 +29,4 @@ RUN pip install -r requirements.txt
 EXPOSE 5000
 
 # Define the command to run your Flask app with gunicorn.
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "main:app"]
+CMD sh -c 'gunicorn -w 4 -b 0.0.0.0:${PORT:-5000} main:app'
