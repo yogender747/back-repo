@@ -4,8 +4,7 @@ FROM python:3.10
 # Set the working directory in the container.
 WORKDIR /app
 
-# Install system dependencies needed for building Python packages,
-# including distutils and the virtual environment support.
+# Install system dependencies (including distutils and venv support).
 RUN apt-get update && \
     apt-get install -y python3-distutils python3-venv && \
     rm -rf /var/lib/apt/lists/*
@@ -25,8 +24,11 @@ RUN pip install --upgrade pip setuptools wheel
 # Install Python dependencies from requirements.txt.
 RUN pip install -r requirements.txt
 
-# Expose the new port (8000)
-EXPOSE 8000
+# Expose the port your Flask app will run on.
+EXPOSE 5000
 
-# Use a CMD that defaults to port 8000
-CMD ["sh", "-c", "PORT_VAL=${PORT:-8000}; echo Starting on port $PORT_VAL; gunicorn -w 4 -b 0.0.0.0:$PORT_VAL main:app"]
+# Set a default PORT value.
+ENV PORT 5000
+
+# Run the Flask app using gunicorn, using the PORT environment variable.
+CMD ["sh", "-c", "echo Starting on port $PORT; gunicorn -w 4 -b 0.0.0.0:$PORT main:app"]
