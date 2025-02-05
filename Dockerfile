@@ -25,9 +25,8 @@ RUN pip install --upgrade pip setuptools wheel
 # Install Python dependencies from requirements.txt.
 RUN pip install -r requirements.txt
 
-# Expose the port your Flask app will run on.
-EXPOSE 5000
+# Expose the new port (8000)
+EXPOSE 8000
 
-# Define the command to run your Flask app with gunicorn.
-CMD ["sh", "-c", "PORT_VAL=${PORT:-5000}; echo Starting on port $PORT_VAL; gunicorn -w 4 -b 0.0.0.0:$PORT_VAL main:app"]
-
+# Use a CMD that defaults to port 8000
+CMD ["sh", "-c", "PORT_VAL=${PORT:-8000}; echo Starting on port $PORT_VAL; gunicorn -w 4 -b 0.0.0.0:$PORT_VAL main:app"]
