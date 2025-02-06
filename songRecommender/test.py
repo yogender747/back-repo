@@ -16,7 +16,7 @@ sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
 data_path = os.path.join(os.path.dirname(__file__), "data", "data_moods.csv")
 df1 = pd.read_csv(data_path)
 
-# Use relative path for new.txt (assuming new.txt is in project-root)
+# Use a relative path for new.txt (assuming new.txt is in project-root)
 new_txt_path = os.path.join(os.path.dirname(__file__), "..", "new.txt")
 with open(new_txt_path, 'r') as fp:
     mood = fp.read().strip()
@@ -27,14 +27,14 @@ list_of_songs = []
 for row in df2.iterrows():
     list_of_songs.append("spotify:track:" + str(row[1]['id']))
 list_of_songs = random.sample(list_of_songs, min(15, len(list_of_songs)))
-print(len(list_of_songs))
+print("Number of songs selected:", len(list_of_songs))
 playlist_name = mood + ' Songs'
 playlist_description = mood + ' Songs'
 user_id = sp.me()['id']
 sp.user_playlist_create(user=user_id, name=playlist_name, public=True, description=playlist_description)
 prePlaylists = sp.user_playlists(user=user_id)
 playlist = prePlaylists['items'][0]['id']
-print(playlist)
+print("Created Playlist ID:", playlist)
 sp.user_playlist_add_tracks(user=user_id, playlist_id=playlist, tracks=list(list_of_songs))
 print("Created " + mood + " playlist")
 with open(new_txt_path, 'w') as fp:

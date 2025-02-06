@@ -77,4 +77,6 @@ html_content = f'''<!DOCTYPE html>
 with open(new_html_path, "w") as fp:
     fp.write(html_content)
 
-os.system(new_html_path)
+# Instead of attempting to open the HTML file (which won’t work in a headless environment),
+# simply print its location.
+print("New HTML file generated at:", new_html_path)

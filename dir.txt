@@ -1,0 +1,38 @@
+Folder PATH listing for volume Study
+Volume serial number is 5AFD-D813
+D:.
+¦   dir.txt
+¦   main.py
+¦   nixpacks.toml
+¦   Procfile
+¦   requirements.txt
+¦   runtime.txt
+¦   
++---emotionDetection
+¦       haarcascade_frontalface_default.xml
+¦       model.h5
+¦       
++---songRecommender
+    ¦   clustering2.ipynb
+    ¦   data-download.ipynb
+    ¦   helpers.py
+    ¦   Keras-Classification.ipynb
+    ¦   test.py
+    ¦   test2.py
+    ¦   
+    +---.ipynb_checkpoints
+    ¦       clustering2-checkpoint.ipynb
+    ¦       data-download-checkpoint.ipynb
+    ¦       Keras-Classification-checkpoint.ipynb
+    ¦       
+    +---data
+    ¦       cluster0.csv
+    ¦       cluster1.csv
+    ¦       data_moods.csv
+    ¦       df.csv
+    ¦       df1.csv
+    ¦       df2.csv
+    ¦       
+    +---__pycache__
+            helpers.cpython-312.pyc
+            

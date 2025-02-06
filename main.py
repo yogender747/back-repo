@@ -21,9 +21,9 @@ from datetime import datetime
 cv2.setUseOptimized(False)
 cv2.ocl.setUseOpenCL(False)
 
-# ✅ Create Flask app and set template folder
+# ✅ Create Flask app and set template folder (ensure your templates are in emotionDetection/templates)
 app = Flask(__name__, template_folder="../emotionDetection/templates")
-app.secret_key = os.environ.get("FLASK_SECRET_KEY", "supersecretkey")  # Use env var in production
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "supersecretkey")  # Use an environment variable in production
 
 # ✅ Load Face Detector & Model
 cascade_path = os.path.join(os.path.dirname(__file__), '..', 'emotionDetection', 'haarcascade_frontalface_default.xml')
@@ -44,11 +44,11 @@ emotion_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Neutral', 'Sad', 'Surpri
 data_moods_path = os.path.join(os.path.dirname(__file__), 'songRecommender', 'data', 'data_moods.csv')
 df1 = pd.read_csv(data_moods_path)
 
-# ✅ Initialize Spotify API
+# ✅ Initialize Spotify API with production callback URL (ensure SPOTIFY_REDIRECT_URI is set in your environment)
 sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
     client_id=os.environ.get("SPOTIFY_CLIENT_ID"),
     client_secret=os.environ.get("SPOTIFY_CLIENT_SECRET"),
-    redirect_uri="https://your-backend-api.up.railway.app/callback",  # ✅ Matches Spotify Developer Dashboard
+    redirect_uri=os.environ.get("SPOTIFY_REDIRECT_URI", "https://your-backend-api.up.railway.app/callback"),
     scope="user-read-playback-state user-library-read playlist-read-private playlist-read-collaborative playlist-modify-public"
 ))
 
@@ -64,7 +64,6 @@ def playlist():
 def recommended_albums():
     try:
         print("🔎 Fetching recommended albums...")
-
         mood = request.args.get('mood', 'happy')
         limit = 50
         offset = random.randint(0, 950)
@@ -76,7 +75,6 @@ def recommended_albums():
             return jsonify({"error": "No recommended albums found"}), 500
         
         random.shuffle(albums)
-        
         album_data = [
             {
                 "name": album['name'],
@@ -86,7 +84,6 @@ def recommended_albums():
             }
             for album in albums
         ]
-        
         return jsonify({"albums": album_data})
     
     except Exception as e:
@@ -105,13 +102,11 @@ def detect():
 
     npimg = np.frombuffer(file.read(), np.uint8)
     img = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
-
     if img is None:
         return jsonify({"error": "Error decoding image"}), 400
 
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
-
     if len(faces) == 0:
         return jsonify({"error": "No face detected"}), 400
 
@@ -119,17 +114,14 @@ def detect():
     for (x, y, w, h) in faces:
         roi_gray = gray[y:y + h, x:x + w]
         roi_gray = cv2.resize(roi_gray, (48, 48))
-
         roi = roi_gray.astype("float") / 255.0
-        roi = img_to_array(roi)  # ✅ Fixed Import Here
+        roi = img_to_array(roi)
         roi = np.expand_dims(roi, axis=0)
-
         prediction = classifier.predict(roi)[0]
         label = emotion_labels[np.argmax(prediction)]
         emotions_detected.append(label)
 
     detected_emotion = max(set(emotions_detected), key=emotions_detected.count)
-
     emotion_data = session.get('emotion_history', [])
     emotion_data.append({
         "emotion": detected_emotion, 
@@ -146,17 +138,16 @@ def detect():
         "Sad": "Sad"
     }
     mood = mood_mapping.get(detected_emotion, "Calm")
-
     df2 = df1[df1['mood'] == mood]
     if df2.empty:
         return jsonify({"error": "No songs found for this mood"}), 400
 
     list_of_songs = ["spotify:track:" + str(row[1]['id']) for row in df2.iterrows()]
     list_of_songs = random.sample(list_of_songs, min(len(list_of_songs), 15))
-
     playlist_name = f"{mood} Songs"
     user_id = sp.me()['id']
-    new_playlist = sp.user_playlist_create(user=user_id, name=playlist_name, public=True, description=f"Playlist for {mood} mood")
+    new_playlist = sp.user_playlist_create(user=user_id, name=playlist_name, public=True,
+                                             description=f"Playlist for {mood} mood")
     playlist_id = new_playlist['id']
     sp.user_playlist_add_tracks(user=user_id, playlist_id=playlist_id, tracks=list_of_songs)
 
