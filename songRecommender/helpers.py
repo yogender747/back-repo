@@ -7,7 +7,7 @@ from spotipy.oauth2 import SpotifyOAuth
 sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
     client_id=os.environ.get("SPOTIFY_CLIENT_ID", "your_default_client_id"),
     client_secret=os.environ.get("SPOTIFY_CLIENT_SECRET", "your_default_client_secret"),
-    redirect_uri=os.environ.get("SPOTIFY_REDIRECT_URI", "http://localhost:8000"),  # Update in production
+    redirect_uri=os.environ.get("SPOTIFY_REDIRECT_URI", "https://web-production-dac50.up.railway.app/callback"),  # Update in production
     scope="user-read-playback-state streaming ugc-image-upload playlist-modify-public"
 ), requests_timeout=10, retries=10)
 
