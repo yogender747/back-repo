@@ -9,8 +9,8 @@ os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 from flask import Flask, render_template, request, jsonify, session
 import cv2
 import numpy as np
-from keras.models import load_model
-from keras.preprocessing.image import img_to_array
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing.image import img_to_array  # ✅ Fixed Import
 import pandas as pd
 import random
 import spotipy
@@ -116,7 +116,7 @@ def detect():
         roi_gray = cv2.resize(roi_gray, (48, 48))
 
         roi = roi_gray.astype("float") / 255.0
-        roi = img_to_array(roi)
+        roi = img_to_array(roi)  # ✅ Fixed Import Here
         roi = np.expand_dims(roi, axis=0)
 
         prediction = classifier.predict(roi)[0]
