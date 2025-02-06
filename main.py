@@ -14,32 +14,25 @@ from spotipy.oauth2 import SpotifyOAuth
 # --------------------------------------------------
 # Resource & Memory Optimizations
 # --------------------------------------------------
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"      # Force TensorFlow to run on CPU
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"         # Disable oneDNN optimizations
 
-# Force TensorFlow to run on CPU (prevents GPU-related issues)
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-
-# Disable oneDNN optimizations to reduce memory usage
-os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
-
-# --------------------------------------------------
-# Optional: Log current memory usage at startup
+# Optional: Log current memory usage at startup for debugging
 process = psutil.Process(os.getpid())
 print("Startup Memory Usage: {:.2f} MB".format(process.memory_info().rss / 1024 / 1024))
 
 # --------------------------------------------------
-# Create Flask app and set template folder
-# Assumes that the 'emotionDetection' folder is a sibling of your backend folder.
+# Create Flask app and set the template folder
+# (Assumes emotionDetection folder is a sibling to backend)
 app = Flask(__name__, template_folder="../emotionDetection/templates")
-app.secret_key = os.environ.get("FLASK_SECRET_KEY", "supersecretkey")  # Use environment variable in production
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "supersecretkey")
 
 # --------------------------------------------------
 # Load Face Detector & Model
-# Build absolute paths based on current file's location
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 cascade_path = os.path.join(BASE_DIR, '..', 'emotionDetection', 'haarcascade_frontalface_default.xml')
 model_path = os.path.join(BASE_DIR, '..', 'emotionDetection', 'model.h5')
 
-# Check if required files exist; if not, raise an error
 if not os.path.exists(cascade_path):
     raise FileNotFoundError(f"Missing file: {cascade_path}")
 if not os.path.exists(model_path):
@@ -62,7 +55,7 @@ df1 = pd.read_csv(data_moods_path)
 sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
     client_id=os.environ.get("SPOTIFY_CLIENT_ID"),
     client_secret=os.environ.get("SPOTIFY_CLIENT_SECRET"),
-    redirect_uri="https://web-production-dac50.up.railway.app/callback",  # Ensure this URL is added to your Spotify Developer Dashboard
+    redirect_uri="https://web-production-dac50.up.railway.app/callback",  # Must match Spotify Developer Dashboard
     scope="user-read-playback-state user-library-read playlist-read-private playlist-read-collaborative playlist-modify-public"
 ))
 
@@ -142,8 +135,6 @@ def detect():
         emotions_detected.append(label)
 
     detected_emotion = max(set(emotions_detected), key=emotions_detected.count)
-
-    # Update emotion history in session (limit to last 20 records)
     emotion_data = session.get('emotion_history', [])
     emotion_data.append({
         "emotion": detected_emotion, 
@@ -160,7 +151,6 @@ def detect():
         "Sad": "Sad"
     }
     mood = mood_mapping.get(detected_emotion, "Calm")
-
     df2 = df1[df1['mood'] == mood]
     if df2.empty:
         return jsonify({"error": "No songs found for this mood"}), 400
