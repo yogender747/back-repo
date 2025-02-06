@@ -26,7 +26,7 @@ app = Flask(__name__, template_folder="../emotionDetection/templates")
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "supersecretkey")  # Use an environment variable in production
 
 # ✅ Load Face Detector & Model
-cascade_path = os.path.join(os.path.dirname(__file__), '..', 'emotionDetection', 'haarcascade_frontalface_default.xml')
+cascade_path = os.path.join(os.path.dirname(__file__), 'emotionDetection', 'haarcascade_frontalface_default.xml')
 model_path = os.path.join(os.path.dirname(__file__), '..', 'emotionDetection', 'model.h5')
 
 if not os.path.exists(cascade_path):
