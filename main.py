@@ -10,14 +10,14 @@ from flask import Flask, render_template, request, jsonify, session
 import cv2
 import numpy as np
 from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing.image import img_to_array  # ✅ Fixed Import
+from tensorflow.keras.utils import img_to_array  # ✅ More Reliable Import
 import pandas as pd
 import random
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 from datetime import datetime
 
-# ✅ Reduce OpenCV Memory Usage
+# ✅ Reduce OpenCV Memory Usage (Must be placed **after** OpenCV imports)
 cv2.setUseOptimized(False)
 cv2.ocl.setUseOpenCL(False)
 
@@ -28,6 +28,12 @@ app.secret_key = os.environ.get("FLASK_SECRET_KEY", "supersecretkey")  # Use env
 # ✅ Load Face Detector & Model
 cascade_path = os.path.join(os.path.dirname(__file__), '..', 'emotionDetection', 'haarcascade_frontalface_default.xml')
 model_path = os.path.join(os.path.dirname(__file__), '..', 'emotionDetection', 'model.h5')
+
+if not os.path.exists(cascade_path):
+    raise FileNotFoundError(f"❌ Missing File: {cascade_path}")
+if not os.path.exists(model_path):
+    raise FileNotFoundError(f"❌ Missing File: {model_path}")
+
 face_cascade = cv2.CascadeClassifier(cascade_path)
 classifier = load_model(model_path)
 
@@ -42,7 +48,7 @@ df1 = pd.read_csv(data_moods_path)
 sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
     client_id=os.environ.get("SPOTIFY_CLIENT_ID"),
     client_secret=os.environ.get("SPOTIFY_CLIENT_SECRET"),
-    redirect_uri="https://your-backend-api.up.railway.app/callback",  # ✅ Updated for Railway Deployment
+    redirect_uri="https://your-backend-api.up.railway.app/callback",  # ✅ Matches Spotify Developer Dashboard
     scope="user-read-playback-state user-library-read playlist-read-private playlist-read-collaborative playlist-modify-public"
 ))
 
@@ -89,8 +95,7 @@ def recommended_albums():
 
 @app.route('/emotion-history')
 def emotion_history():
-    emotion_data = session.get('emotion_history', [])
-    return jsonify({"history": emotion_data})
+    return jsonify({"history": session.get('emotion_history', [])})
 
 @app.route('/detect', methods=['POST'])
 def detect():
@@ -146,7 +151,6 @@ def detect():
     if df2.empty:
         return jsonify({"error": "No songs found for this mood"}), 400
 
-    df2 = df2.astype({'id': 'string'})
     list_of_songs = ["spotify:track:" + str(row[1]['id']) for row in df2.iterrows()]
     list_of_songs = random.sample(list_of_songs, min(len(list_of_songs), 15))
 
@@ -156,10 +160,8 @@ def detect():
     playlist_id = new_playlist['id']
     sp.user_playlist_add_tracks(user=user_id, playlist_id=playlist_id, tracks=list_of_songs)
 
-    print(f"✅ Created Playlist: {playlist_name} - {playlist_id}")
-
     return jsonify({"emotion": detected_emotion, "redirect": f"/playlist.html?playlist={playlist_id}"})
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 8000))  # ✅ Railway uses $PORT, default to 8000
+    port = int(os.environ.get("PORT", 8000))
     app.run(host="0.0.0.0", port=port, debug=(os.environ.get("FLASK_ENV") != "production"))
