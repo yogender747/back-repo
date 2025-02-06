@@ -8,15 +8,15 @@ import random
 sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
     client_id=os.environ.get("SPOTIFY_CLIENT_ID", "your_default_client_id"),
     client_secret=os.environ.get("SPOTIFY_CLIENT_SECRET", "your_default_client_secret"),
-    redirect_uri=os.environ.get("SPOTIFY_REDIRECT_URI", "https://web-production-dac50.up.railway.app/callback"),
+    redirect_uri=os.environ.get("SPOTIFY_REDIRECT_URI", "http://localhost:8000"),
     scope="user-read-playback-state streaming ugc-image-upload playlist-modify-public"
 ))
 
-# Use a relative path for the data CSV (assuming test.py is in songRecommender/)
+# Path to the data CSV in backend/songRecommender/data/
 data_path = os.path.join(os.path.dirname(__file__), "data", "data_moods.csv")
 df1 = pd.read_csv(data_path)
 
-# Use a relative path for new.txt (assuming new.txt is in project-root)
+# new.txt is assumed to be in the backend folder.
 new_txt_path = os.path.join(os.path.dirname(__file__), "..", "new.txt")
 with open(new_txt_path, 'r') as fp:
     mood = fp.read().strip()

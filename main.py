@@ -21,13 +21,18 @@ from datetime import datetime
 cv2.setUseOptimized(False)
 cv2.ocl.setUseOpenCL(False)
 
-# ✅ Create Flask app and set template folder (ensure your templates are in emotionDetection/templates)
-app = Flask(__name__, template_folder="../emotionDetection/templates")
+# Set the template folder.
+# If your HTML templates (e.g. camera.html, playlist.html) are stored in:
+# backend/emotionDetection/templates, update the path accordingly.
+app = Flask(
+    __name__,
+    template_folder=os.path.join(os.path.dirname(__file__), "emotionDetection", "templates")
+)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "supersecretkey")  # Use an environment variable in production
 
-# ✅ Load Face Detector & Model
-cascade_path = os.path.join(os.path.dirname(__file__), 'emotionDetection', 'haarcascade_frontalface_default.xml')
-model_path = os.path.join(os.path.dirname(__file__), '..', 'emotionDetection', 'model.h5')
+# Load Face Detector & Model from backend/emotionDetection/
+cascade_path = os.path.join(os.path.dirname(__file__), "emotionDetection", "haarcascade_frontalface_default.xml")
+model_path = os.path.join(os.path.dirname(__file__), "emotionDetection", "model.h5")
 
 if not os.path.exists(cascade_path):
     raise FileNotFoundError(f"❌ Missing File: {cascade_path}")
@@ -37,18 +42,19 @@ if not os.path.exists(model_path):
 face_cascade = cv2.CascadeClassifier(cascade_path)
 classifier = load_model(model_path)
 
-# ✅ Emotion Labels
+# Emotion Labels
 emotion_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Neutral', 'Sad', 'Surprise']
 
-# ✅ Load Music Dataset
-data_moods_path = os.path.join(os.path.dirname(__file__), 'songRecommender', 'data', 'data_moods.csv')
+# Load Music Dataset from backend/songRecommender/data/
+data_moods_path = os.path.join(os.path.dirname(__file__), "songRecommender", "data", "data_moods.csv")
 df1 = pd.read_csv(data_moods_path)
 
-# ✅ Initialize Spotify API with production callback URL (ensure SPOTIFY_REDIRECT_URI is set in your environment)
+# Initialize Spotify API (ensure the environment variables are set on your deployment platform)
 sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
     client_id=os.environ.get("SPOTIFY_CLIENT_ID"),
     client_secret=os.environ.get("SPOTIFY_CLIENT_SECRET"),
-    redirect_uri=os.environ.get("SPOTIFY_REDIRECT_URI", "https://web-production-dac50.up.railway.app/callback"),
+    # SPOTIFY_REDIRECT_URI should be set to your deployed backend URL + "/callback"
+    redirect_uri=os.environ.get("SPOTIFY_REDIRECT_URI", "https://your-backend-api.up.railway.app/callback"),
     scope="user-read-playback-state user-library-read playlist-read-private playlist-read-collaborative playlist-modify-public"
 ))
 
@@ -67,13 +73,10 @@ def recommended_albums():
         mood = request.args.get('mood', 'happy')
         limit = 50
         offset = random.randint(0, 950)
-        
         results = sp.search(q=mood, type='album', limit=limit, offset=offset)
         albums = results.get('albums', {}).get('items', [])
-        
         if not albums:
             return jsonify({"error": "No recommended albums found"}), 500
-        
         random.shuffle(albums)
         album_data = [
             {
@@ -85,7 +88,6 @@ def recommended_albums():
             for album in albums
         ]
         return jsonify({"albums": album_data})
-    
     except Exception as e:
         print("🚨 Error fetching recommended albums:", str(e))
         return jsonify({"error": str(e)}), 500
@@ -99,17 +101,14 @@ def detect():
     file = request.files.get('image')
     if file is None:
         return jsonify({"error": "No image received"}), 400
-
     npimg = np.frombuffer(file.read(), np.uint8)
     img = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
     if img is None:
         return jsonify({"error": "Error decoding image"}), 400
-
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
     if len(faces) == 0:
         return jsonify({"error": "No face detected"}), 400
-
     emotions_detected = []
     for (x, y, w, h) in faces:
         roi_gray = gray[y:y + h, x:x + w]
@@ -120,15 +119,13 @@ def detect():
         prediction = classifier.predict(roi)[0]
         label = emotion_labels[np.argmax(prediction)]
         emotions_detected.append(label)
-
     detected_emotion = max(set(emotions_detected), key=emotions_detected.count)
     emotion_data = session.get('emotion_history', [])
     emotion_data.append({
-        "emotion": detected_emotion, 
+        "emotion": detected_emotion,
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     })
     session['emotion_history'] = emotion_data[-20:]
-
     mood_mapping = {
         "Angry": "Energetic",
         "Surprise": "Energetic",
@@ -141,7 +138,6 @@ def detect():
     df2 = df1[df1['mood'] == mood]
     if df2.empty:
         return jsonify({"error": "No songs found for this mood"}), 400
-
     list_of_songs = ["spotify:track:" + str(row[1]['id']) for row in df2.iterrows()]
     list_of_songs = random.sample(list_of_songs, min(len(list_of_songs), 15))
     playlist_name = f"{mood} Songs"
@@ -150,7 +146,6 @@ def detect():
                                              description=f"Playlist for {mood} mood")
     playlist_id = new_playlist['id']
     sp.user_playlist_add_tracks(user=user_id, playlist_id=playlist_id, tracks=list_of_songs)
-
     return jsonify({"emotion": detected_emotion, "redirect": f"/playlist.html?playlist={playlist_id}"})
 
 if __name__ == '__main__':

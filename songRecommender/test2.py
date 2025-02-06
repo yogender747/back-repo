@@ -1,9 +1,9 @@
 import os
 
-# Determine the project root (assumes songRecommender is in project-root)
+# The backend folder is the project root for the backend.
 project_root = os.path.join(os.path.dirname(__file__), "..")
 
-# Relative paths for new.html and new.txt
+# new.html and new.txt are assumed to be in the backend folder.
 new_html_path = os.path.join(project_root, "new.html")
 new_txt_path = os.path.join(project_root, "new.txt")
 
@@ -77,6 +77,4 @@ html_content = f'''<!DOCTYPE html>
 with open(new_html_path, "w") as fp:
     fp.write(html_content)
 
-# Instead of attempting to open the HTML file (which won’t work in a headless environment),
-# simply print its location.
 print("New HTML file generated at:", new_html_path)
