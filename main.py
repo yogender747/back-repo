@@ -48,7 +48,7 @@ df1 = pd.read_csv(data_moods_path)
 sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
     client_id=os.environ.get("SPOTIFY_CLIENT_ID"),
     client_secret=os.environ.get("SPOTIFY_CLIENT_SECRET"),
-    redirect_uri=os.environ.get("SPOTIFY_REDIRECT_URI", "https://your-backend-api.up.railway.app/callback"),
+    redirect_uri=os.environ.get("SPOTIFY_REDIRECT_URI", "https://web-production-dac50.up.railway.app/callback"),
     scope="user-read-playback-state user-library-read playlist-read-private playlist-read-collaborative playlist-modify-public"
 ))
 
